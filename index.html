@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BCHA-KSTT · Kiểm Soát Thực Tế</title>
+<style>
+:root {
+  --blue: #1a5276; --blue-light: #2980b9; --red: #e74c3c; --orange: #e67e22;
+  --green: #27ae60; --gray: #666; --bg: #f5f6fa; --card: #fff;
+  --radius: 12px; --shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',Arial,sans-serif; background:var(--bg); color:#1a1a1a; min-height:100vh; }
+.hidden { display:none !important; }
+
+/* Header */
+.topbar {
+  background: linear-gradient(135deg, var(--blue), var(--blue-light));
+  color:#fff; padding:12px 16px; display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+.topbar h1 { font-size:16px; font-weight:700; }
+.topbar .role-badge {
+  font-size:11px; background:rgba(255,255,255,0.2); padding:4px 10px; border-radius:20px; cursor:pointer;
+}
+.topbar .role-badge:hover { background:rgba(255,255,255,0.35); }
+
+/* Login */
+.login-container {
+  max-width:400px; margin:60px auto; padding:16px;
+}
+.login-card {
+  background:var(--card); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow);
+  text-align:center;
+}
+.login-card h2 { font-size:20px; color:var(--blue); margin-bottom:6px; }
+.login-card .sub { font-size:12px; color:var(--gray); margin-bottom:20px; }
+.login-card select, .login-card input {
+  width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:14px; margin-bottom:10px;
+  font-family:inherit;
+}
+.login-card button {
+  width:100%; padding:14px; background:var(--blue-light); color:#fff; border:none;
+  border-radius:8px; font-size:15px; font-weight:600; cursor:pointer;
+}
+.role-tabs {
+  display:flex; gap:6px; margin-bottom:14px;
+}
+.role-tab {
+  flex:1; padding:10px; border:2px solid #ddd; border-radius:8px; text-align:center;
+  font-size:13px; font-weight:600; cursor:pointer; background:#fff; transition:all .2s;
+}
+.role-tab.active { border-color:var(--blue-light); background:#ebf5fb; color:var(--blue); }
+
+/* Main */
+.main { max-width:900px; margin:0 auto; padding:12px 14px 40px; }
+
+/* Info bar */
+.info-bar {
+  background:var(--card); border-radius:var(--radius); padding:12px 14px; margin-bottom:10px;
+  box-shadow:var(--shadow); display:flex; justify-content:space-between; align-items:center;
+  flex-wrap:wrap; gap:8px;
+}
+.info-bar .store-name { font-weight:700; font-size:14px; }
+.info-bar .store-detail { font-size:11px; color:var(--gray); }
+
+/* KSTT Card */
+.kstt-list { display:flex; flex-direction:column; gap:10px; }
+.kstt-card {
+  background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+  overflow:hidden; transition:all .2s; border-left:4px solid #ddd;
+}
+.kstt-card.done { border-left-color:var(--green); }
+.kstt-card.pending { border-left-color:var(--orange); }
+.kstt-card-header {
+  padding:12px 14px; display:flex; justify-content:space-between; align-items:center;
+  cursor:pointer; border-bottom:1px solid #f0f0f0;
+}
+.kstt-card-header .name { font-size:14px; font-weight:600; }
+.kstt-card-header .status { font-size:11px; }
+.status-todo { color:var(--gray); }
+.status-done { color:var(--green); font-weight:600; }
+.status-fail { color:var(--red); font-weight:600; }
+.kstt-card-body {
+  padding:14px; display:flex; flex-direction:column; gap:12px;
+}
+.sample-img {
+  width:100%; max-height:300px; object-fit:contain; border-radius:8px;
+  border:1px solid #eee; background:#fafafa;
+}
+.standard-text { font-size:12px; color:#333; background:#f8f9fa; padding:10px; border-radius:6px; line-height:1.5; }
+.standard-text b { color:var(--blue); }
+
+.capture-box {
+  border:2px dashed #ccc; border-radius:8px; padding:20px; text-align:center; cursor:pointer;
+  transition:all .2s; background:#fafafa; position:relative;
+}
+.capture-box:hover { border-color:var(--blue-light); background:#f0f7ff; }
+.capture-box .icon { font-size:32px; margin-bottom:6px; }
+.capture-box .text { font-size:12px; color:var(--gray); }
+.capture-box img { max-width:100%; max-height:250px; border-radius:8px; }
+.capture-box.has-photo { border-color:var(--green); border-style:solid; padding:6px; }
+.capture-box.has-photo .icon, .capture-box.has-photo .text { display:none; }
+
+.deviation-input {
+  width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;
+  font-size:13px; font-family:inherit; resize:vertical; min-height:48px;
+}
+.deviation-input::placeholder { color:#bbb; }
+
+.btn {
+  padding:10px 20px; border:none; border-radius:8px; font-size:13px; font-weight:600;
+  cursor:pointer; transition:all .2s;
+}
+.btn-primary { background:var(--blue-light); color:#fff; }
+.btn-primary:hover { background:var(--blue); }
+.btn-primary:disabled { background:#ccc; cursor:not-allowed; }
+.btn-outline { background:#fff; color:var(--blue); border:2px solid var(--blue-light); }
+.btn-outline:hover { background:#ebf5fb; }
+
+/* QLKV review */
+.review-photo-row {
+  display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap;
+}
+.review-photo {
+  width:48%; border-radius:8px; border:1px solid #eee;
+}
+.review-photo .label { font-size:11px; color:var(--gray); padding:4px 8px; background:#f8f9fa; }
+.review-photo img { width:100%; max-height:250px; object-fit:contain; border-radius:0 0 8px 8px; }
+.review-actions {
+  display:flex; gap:8px; margin-top:8px;
+}
+.btn-pass { background:var(--green); color:#fff; }
+.btn-fail { background:var(--red); color:#fff; }
+.btn-pass:hover { background:#219a52; }
+.btn-fail:hover { background:#c0392b; }
+
+.qkvl-verdict {
+  display:inline-block; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;
+}
+.qkvl-pass { background:#eafaf1; color:var(--green); }
+.qkvl-fail { background:#fdedec; color:var(--red); }
+
+/* Toast */
+.toast {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:#333; color:#fff; padding:12px 24px; border-radius:20px; font-size:13px;
+  z-index:999; opacity:0; transition:opacity .3s;
+}
+.toast.show { opacity:1; }
+
+/* Tab switch */
+.tab-bar {
+  display:flex; gap:6px; margin-bottom:12px;
+}
+.tab-btn {
+  flex:1; padding:10px; border-radius:8px; border:1px solid #ddd; background:#fff;
+  font-size:13px; font-weight:600; cursor:pointer; text-align:center;
+}
+.tab-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+
+.submit-all { display:flex; justify-content:center; padding:16px 0; }
+.submit-all button {
+  padding:14px 40px; font-size:15px;
+}
+
+/* Summary for QLKV */
+.ch-submission {
+  background:var(--card); border-radius:var(--radius); padding:12px 14px; margin-bottom:8px;
+  box-shadow:var(--shadow); cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+}
+.ch-submission:hover { background:#f0f7ff; }
+.ch-submission .ch-info { font-weight:600; font-size:14px; }
+.ch-submission .ch-meta { font-size:11px; color:var(--gray); }
+.ch-submission .ch-count { font-size:12px; font-weight:600; }
+
+/* Loading */
+.spinner {
+  width:24px; height:24px; border:3px solid #ddd; border-top-color:var(--blue-light);
+  border-radius:50%; animation:spin .6s linear infinite; margin:20px auto;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <h1>📸 BCHA-KSTT</h1>
+  <span class="role-badge" id="roleBadge" onclick="doLogout()">CH</span>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-container">
+  <div class="login-card">
+    <h2>📸 BCHA · Kiểm Soát Thực Tế</h2>
+    <div class="sub">Báo cáo hình ảnh & duyệt tuân thủ</div>
+    
+    <div class="role-tabs" id="roleTabs">
+      <div class="role-tab active" data-role="CH" onclick="selectRole('CH')">🏪 Cửa Hàng</div>
+      <div class="role-tab" data-role="QLKV" onclick="selectRole('QLKV')">👤 QLKV</div>
+      <div class="role-tab" data-role="GDV" onclick="selectRole('GDV')">👔 GĐV</div>
+    </div>
+
+    <div id="loginFormCH">
+      <select id="selCH" onchange="onCHSelect()">
+        <option value="">-- Chọn Cửa Hàng --</option>
+      </select>
+    </div>
+
+    <div id="loginFormQLKV" class="hidden">
+      <select id="selQLKV" onchange="onQLKVSelect()">
+        <option value="">-- Chọn QLKV --</option>
+      </select>
+    </div>
+
+    <div id="loginFormGDV" class="hidden">
+      <select id="selGDV" onchange="onGDVSelect()">
+        <option value="">-- Chọn GĐV --</option>
+      </select>
+    </div>
+
+    <button onclick="doLogin()">👉 Vào Hệ Thống</button>
+    <div style="font-size:10px;color:#aaa;margin-top:10px;">v1.0-beta · Demo</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="appScreen" class="main hidden">
+  
+  <!-- CH VIEW -->
+  <div id="viewCH">
+    <div class="info-bar">
+      <div>
+        <div class="store-name" id="chStoreName">WM+ HNI 391 Ngô Xuân Quảng</div>
+        <div class="store-detail" id="chStoreDetail">GĐV: Phạm Minh Thu · QLKV: Trần Thu Trang</div>
+      </div>
+      <div style="font-size:22px;cursor:pointer;" onclick="doLogout()" title="Đổi CH">🔄</div>
+    </div>
+
+    <div class="kstt-list" id="ksttListCH"></div>
+    
+    <div class="submit-all">
+      <button class="btn btn-primary" onclick="submitAllCH()" id="btnSubmitAll">
+        📤 Gửi Báo Cáo Cho QLKV
+      </button>
+    </div>
+  </div>
+
+  <!-- QLKV VIEW -->
+  <div id="viewQLKV" class="hidden">
+    <div class="info-bar">
+      <div>
+        <div class="store-name" id="qlkvName">QLKV: Trần Thu Trang</div>
+        <div class="store-detail" id="qlkvDetail"></div>
+      </div>
+      <div style="font-size:22px;cursor:pointer;" onclick="doLogout()" title="Đổi QLKV">🔄</div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab-btn active" onclick="switchQLKVTab('pending')">⏳ Chờ duyệt</div>
+      <div class="tab-btn" onclick="switchQLKVTab('done')">✅ Đã duyệt</div>
+    </div>
+
+    <div id="qlkvPendingList"></div>
+    <div id="qlkvDoneList" class="hidden"></div>
+
+    <!-- Detail modal inline -->
+    <div id="qlkvDetailView" class="hidden" style="margin-top:10px;"></div>
+  </div>
+
+  <!-- GDV VIEW -->
+  <div id="viewGDV" class="hidden">
+    <div class="info-bar">
+      <div>
+        <div class="store-name" id="gdvName">GĐV: Phạm Minh Thu</div>
+        <div class="store-detail" id="gdvDetail"></div>
+      </div>
+      <div style="font-size:22px;cursor:pointer;" onclick="doLogout()" title="Đổi GĐV">🔄</div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab-btn active" onclick="switchGDVTab('pending')">⏳ Chờ chốt</div>
+      <div class="tab-btn" onclick="switchGDVTab('done')">✅ Đã chốt</div>
+    </div>
+
+    <div id="gdvPendingList"></div>
+    <div id="gdvDoneList" class="hidden"></div>
+    <div id="gdvDetailView" class="hidden" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== STATE ==========
+let state = {
+  role: 'CH',
+  user: null, // { code, name, gdv, qlkv }
+  storelist: [],
+  ksttItems: [],
+  submissions: {} // key: store_code -> item_id -> { photo, deviation, qlkvVerdict, qlkvNote, gdvVerdict, gdvNote, submittedAt }
+};
+
+// ========== DATA ==========
+const KSTT_ITEMS = [
+  { id:'k1', name:'Mặt tiền & Biển hiệu', standard:'Biển hiệu WCM sáng rõ, không che khuất, đúng màu thương hiệu. Mặt tiền sạch sẽ, không dán QC trái phép.', sample:'https://placehold.co/600x400/2980b9/white?text=Mau+Mat+Tien' },
+  { id:'k2', name:'Kệ Rau - Trưng bày', standard:'Rau xếp gọn gàng theo nhóm, có bảng giá rõ ràng. Không có rau héo/dập. Kệ sạch, không đọng nước.', sample:'https://placehold.co/600x400/27ae60/white?text=Mau+Ke+Rau' },
+  { id:'k3', name:'Kệ Thịt - Tươi sống', standard:'Thịt được bảo quản đúng nhiệt độ. Trưng bày theo loại, có giá niêm yết. Khu vực sạch, không mùi.', sample:'https://placehold.co/600x400/e74c3c/white?text=Mau+Ke+Thit' },
+  { id:'k4', name:'Kệ Gạo - Hàng khô', standard:'Gạo xếp theo thương hiệu, có bảng giá. Không bụi, không ẩm mốc. Kệ đầy đủ, không trống.', sample:'https://placehold.co/600x400/f39c12/white?text=Mau+Ke+Gao' },
+  { id:'k5', name:'Showcase - Trưng bày KM', standard:'Hàng KM trưng bày nổi bật, có poster/promo rõ ràng. Sản phẩm còn date, sạch đẹp.', sample:'https://placehold.co/600x400/8e44ad/white?text=Mau+Showcase+KM' },
+];
+
+const SAMPLE_STORES = [
+  { code:'2797', name:'WM+ HNI TTTM Chợ Sải', gdv:'Phạm Minh Thu', qlkv:'Trần Thu Trang', province:'TP. Hà Nội' },
+  { code:'2924', name:'WM+ HNI 391 Ngô Xuân Quảng', gdv:'Phạm Minh Thu', qlkv:'Trần Thu Trang', province:'TP. Hà Nội' },
+  { code:'3001', name:'WM+ HNI CT Pháp Vân', gdv:'Tạ Công Nhận', qlkv:'Nguyễn Văn An', province:'TP. Hà Nội' },
+  { code:'3150', name:'WM+ HNI Times City', gdv:'Tạ Quốc Huy', qlkv:'Lê Thị Mai', province:'TP. Hà Nội' },
+  { code:'3205', name:'WM+ HBN Lương Sơn', gdv:'Dương Tùng', qlkv:'Bùi Thị Tuyền', province:'Hòa Bình' },
+  { code:'3300', name:'WM+ SLA Chiềng An', gdv:'Dương Tùng', qlkv:'Trang', province:'Sơn La' },
+  { code:'3400', name:'WM+ DBN Tủa Chùa', gdv:'Dương Tùng', qlkv:'Vânnm', province:'Điện Biên' },
+];
+
+// Deduplicate QLKV/GĐV lists
+const QLKV_LIST = [...new Set(SAMPLE_STORES.map(s => s.qlkv))].sort();
+const GDV_LIST = [...new Set(SAMPLE_STORES.map(s => s.gdv))].sort();
+
+// Load from localStorage
+function loadState() {
+  const saved = localStorage.getItem('bcha_state');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      state.submissions = parsed.submissions || {};
+    } catch(e) {}
+  }
+}
+function saveState() {
+  localStorage.setItem('bcha_state', JSON.stringify({ submissions: state.submissions }));
+}
+
+// ========== INIT ==========
+function init() {
+  loadState();
+  state.storelist = SAMPLE_STORES;
+  state.ksttItems = KSTT_ITEMS;
+  
+  // Populate selects
+  const selCH = document.getElementById('selCH');
+  SAMPLE_STORES.forEach(s => {
+    selCH.innerHTML += `<option value="${s.code}">${s.code} - ${s.name}</option>`;
+  });
+  
+  const selQLKV = document.getElementById('selQLKV');
+  QLKV_LIST.forEach(q => {
+    selQLKV.innerHTML += `<option value="${q}">${q}</option>`;
+  });
+  
+  const selGDV = document.getElementById('selGDV');
+  GDV_LIST.forEach(g => {
+    selGDV.innerHTML += `<option value="${g}">${g}</option>`;
+  });
+}
+
+// ========== AUTH / ROLE ==========
+let currentRole = 'CH';
+function selectRole(role) {
+  currentRole = role;
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.role-tab[data-role="${role}"]`).classList.add('active');
+  
+  document.getElementById('loginFormCH').classList.toggle('hidden', role !== 'CH');
+  document.getElementById('loginFormQLKV').classList.toggle('hidden', role !== 'QLKV');
+  document.getElementById('loginFormGDV').classList.toggle('hidden', role !== 'GDV');
+}
+
+function onCHSelect() {
+  const code = document.getElementById('selCH').value;
+  if (!code) return;
+  // Could pre-fill info
+}
+function onQLKVSelect() {}
+function onGDVSelect() {}
+
+function doLogin() {
+  const role = currentRole;
+  let user = null;
+  
+  if (role === 'CH') {
+    const code = document.getElementById('selCH').value;
+    if (!code) { toast('Vui lòng chọn Cửa Hàng'); return; }
+    const store = SAMPLE_STORES.find(s => s.code === code);
+    if (!store) { toast('Không tìm thấy CH'); return; }
+    user = { ...store, role:'CH' };
+  } else if (role === 'QLKV') {
+    const name = document.getElementById('selQLKV').value;
+    if (!name) { toast('Vui lòng chọn QLKV'); return; }
+    user = { name, role:'QLKV' };
+  } else if (role === 'GDV') {
+    const name = document.getElementById('selGDV').value;
+    if (!name) { toast('Vui lòng chọn GĐV'); return; }
+    user = { name, role:'GDV' };
+  }
+  
+  if (!user) return;
+  
+  state.role = role;
+  state.user = user;
+  
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  document.getElementById('roleBadge').textContent = role === 'CH' ? '🏪 CH' : role === 'QLKV' ? '👤 QLKV' : '👔 GĐV';
+  
+  // Show correct view
+  document.getElementById('viewCH').classList.toggle('hidden', role !== 'CH');
+  document.getElementById('viewQLKV').classList.toggle('hidden', role !== 'QLKV');
+  document.getElementById('viewGDV').classList.toggle('hidden', role !== 'GDV');
+  
+  if (role === 'CH') renderCHView();
+  else if (role === 'QLKV') renderQLKVView();
+  else if (role === 'GDV') renderGDVView();
+}
+
+function doLogout() {
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('appScreen').classList.add('hidden');
+  state.user = null;
+}
+
+// ========== CH VIEW ==========
+function renderCHView() {
+  const store = state.user;
+  document.getElementById('chStoreName').textContent = `${store.code} - ${store.name}`;
+  document.getElementById('chStoreDetail').textContent = `GĐV: ${store.gdv} · QLKV: ${store.qlkv} · ${store.province}`;
+  
+  const container = document.getElementById('ksttListCH');
+  container.innerHTML = '';
+  
+  KSTT_ITEMS.forEach(item => {
+    const sub = (state.submissions[store.code] || {})[item.id];
+    const hasSubmitted = !!sub;
+    
+    const card = document.createElement('div');
+    card.className = `kstt-card ${hasSubmitted ? 'done' : 'pending'}`;
+    card.innerHTML = `
+      <div class="kstt-card-header" onclick="toggleKSTT(this)">
+        <span class="name">${item.name}</span>
+        <span class="status ${hasSubmitted ? 'status-done' : 'status-todo'}">
+          ${hasSubmitted ? '✅ Đã chụp' : '⏳ Chưa chụp'}
+        </span>
+      </div>
+      <div class="kstt-card-body ${hasSubmitted ? '' : ''}" style="${hasSubmitted ? '' : 'display:none'}">
+        <div style="font-size:12px;color:var(--gray);">📷 Ảnh mẫu:</div>
+        <img class="sample-img" src="${item.sample}" alt="Ảnh mẫu ${item.name}" loading="lazy">
+        <div class="standard-text">📋 <b>Tiêu chuẩn:</b> ${item.standard}</div>
+        
+        <div style="font-size:12px;color:var(--gray);">📸 Ảnh thực tế:</div>
+        <div class="capture-box ${hasSubmitted ? 'has-photo' : ''}" id="capture-${item.id}" onclick="capturePhoto('${item.id}')">
+          ${hasSubmitted 
+            ? `<img src="${sub.photo}" alt="Ảnh thực tế">` 
+            : '<div class="icon">📸</div><div class="text">Chạm để chụp ảnh</div>'}
+        </div>
+        ${hasSubmitted ? `<div style="text-align:center;font-size:11px;color:var(--gray);">Chạm vào ảnh để chụp lại</div>` : ''}
+        
+        <textarea class="deviation-input" id="dev-${item.id}" 
+          placeholder="Ghi chú sai lệch với mẫu (nếu có)..." 
+          rows="2">${hasSubmitted ? (sub.deviation || '') : ''}</textarea>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+  
+  updateSubmitButton();
+}
+
+function toggleKSTT(header) {
+  const body = header.nextElementSibling;
+  body.style.display = body.style.display === 'none' ? 'flex' : 'none';
+}
+
+function capturePhoto(itemId) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    resizeAndPreview(file, itemId);
+  };
+  input.click();
+}
+
+function resizeAndPreview(file, itemId) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxW = 1024, maxH = 768;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      if (h > maxH) { w = w * maxH / h; h = maxH; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      
+      // Store
+      const storeCode = state.user.code;
+      if (!state.submissions[storeCode]) state.submissions[storeCode] = {};
+      if (!state.submissions[storeCode][itemId]) state.submissions[storeCode][itemId] = {};
+      state.submissions[storeCode][itemId].photo = dataUrl;
+      state.submissions[storeCode][itemId].submittedAt = new Date().toISOString();
+      saveState();
+      
+      // Re-render
+      renderCHView();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitAllCH() {
+  const storeCode = state.user.code;
+  const subs = state.submissions[storeCode] || {};
+  const totalItems = KSTT_ITEMS.length;
+  const doneItems = KSTT_ITEMS.filter(item => subs[item.id] && subs[item.id].photo).length;
+  
+  if (doneItems === 0) {
+    toast('⚠️ Vui lòng chụp ít nhất 1 ảnh trước khi gửi');
+    return;
+  }
+  
+  // Save deviations
+  KSTT_ITEMS.forEach(item => {
+    const devEl = document.getElementById(`dev-${item.id}`);
+    if (devEl && subs[item.id]) {
+      subs[item.id].deviation = devEl.value.trim();
+    }
+  });
+  
+  state.submissions[storeCode] = subs;
+  saveState();
+  
+  toast(`✅ Đã gửi ${doneItems}/${totalItems} đầu mục cho QLKV duyệt`);
+  
+  // Also store in submissions tracking
+  if (!state.submissions[storeCode]._meta) {
+    state.submissions[storeCode]._meta = {
+      storeCode,
+      storeName: state.user.name,
+      gdv: state.user.gdv,
+      qlkv: state.user.qlkv,
+      submittedAt: new Date().toISOString(),
+      qlkvReviewed: false,
+      gdvFinalized: false
+    };
+  } else {
+    state.submissions[storeCode]._meta.submittedAt = new Date().toISOString();
+    state.submissions[storeCode]._meta.qlkvReviewed = false;
+    state.submissions[storeCode]._meta.gdvFinalized = false;
+  }
+  saveState();
+  
+  renderCHView();
+  updateSubmitButton();
+}
+
+function updateSubmitButton() {
+  const storeCode = state.user?.code;
+  const subs = state.submissions[storeCode] || {};
+  const done = KSTT_ITEMS.filter(item => subs[item.id] && subs[item.id].photo).length;
+  const btn = document.getElementById('btnSubmitAll');
+  btn.textContent = `📤 Gửi Báo Cáo (${done}/${KSTT_ITEMS.length}) Cho QLKV`;
+}
+
+// ========== QLKV VIEW ==========
+let qlkvCurrentTab = 'pending';
+function renderQLKVView() {
+  document.getElementById('qlkvName').textContent = `QLKV: ${state.user.name}`;
+  
+  const myStores = SAMPLE_STORES.filter(s => s.qlkv === state.user.name);
+  document.getElementById('qlkvDetail').textContent = `${myStores.length} CH phụ trách`;
+  
+  renderQLKVTab();
+}
+
+function switchQLKVTab(tab) {
+  qlkvCurrentTab = tab;
+  document.querySelectorAll('#viewQLKV .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#viewQLKV .tab-btn').forEach(b => {
+    if (b.textContent.includes(tab === 'pending' ? 'Chờ duyệt' : 'Đã duyệt')) b.classList.add('active');
+  });
+  document.getElementById('qlkvPendingList').classList.toggle('hidden', tab !== 'pending');
+  document.getElementById('qlkvDoneList').classList.toggle('hidden', tab !== 'done');
+  document.getElementById('qlkvDetailView').classList.add('hidden');
+  renderQLKVTab();
+}
+
+function renderQLKVTab() {
+  const myStores = SAMPLE_STORES.filter(s => s.qlkv === state.user.name);
+  
+  const pendingList = document.getElementById('qlkvPendingList');
+  const doneList = document.getElementById('qlkvDoneList');
+  
+  let pendingHTML = '';
+  let doneHTML = '';
+  
+  myStores.forEach(store => {
+    const subs = state.submissions[store.code] || {};
+    const meta = subs._meta || {};
+    const hasSubmitted = KSTT_ITEMS.some(item => subs[item.id] && subs[item.id].photo);
+    
+    if (!hasSubmitted) return;
+    
+    const photoCount = KSTT_ITEMS.filter(item => subs[item.id] && subs[item.id].photo).length;
+    const qlkvReviewed = meta.qlkvReviewed;
+    
+    const card = `
+      <div class="ch-submission" onclick="qlkvOpenCH('${store.code}')">
+        <div>
+          <div class="ch-info">${store.code} - ${store.name}</div>
+          <div class="ch-meta">📸 ${photoCount}/${KSTT_ITEMS.length} ảnh · ${meta.submittedAt ? new Date(meta.submittedAt).toLocaleString('vi-VN') : '—'}</div>
+        </div>
+        <div class="ch-count">
+          ${qlkvReviewed 
+            ? '<span class="qkvl-verdict qkvl-pass">✅ Đã duyệt</span>' 
+            : '<span style="color:var(--orange);">⏳ Chờ duyệt</span>'}
+        </div>
+      </div>
+    `;
+    
+    if (qlkvReviewed) doneHTML += card;
+    else pendingHTML += card;
+  });
+  
+  if (!pendingHTML) pendingHTML = '<div style="text-align:center;padding:40px;color:var(--gray);">✅ Không có CH nào chờ duyệt</div>';
+  if (!doneHTML) doneHTML = '<div style="text-align:center;padding:40px;color:var(--gray);">Chưa có CH nào được duyệt</div>';
+  
+  pendingList.innerHTML = pendingHTML;
+  doneList.innerHTML = doneHTML;
+}
+
+function qlkvOpenCH(storeCode) {
+  const store = SAMPLE_STORES.find(s => s.code === storeCode);
+  const subs = state.submissions[storeCode] || {};
+  const meta = subs._meta || {};
+  
+  let html = `<div style="background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);">
+    <div style="font-weight:700;font-size:15px;margin-bottom:10px;">📋 ${storeCode} - ${store.name}</div>
+    <div style="font-size:12px;color:var(--gray);margin-bottom:14px;">GĐV: ${store.gdv} · Gửi lúc: ${meta.submittedAt ? new Date(meta.submittedAt).toLocaleString('vi-VN') : '—'}</div>`;
+  
+  KSTT_ITEMS.forEach(item => {
+    const sub = subs[item.id];
+    if (!sub || !sub.photo) return;
+    
+    const reviewed = sub.qlkvVerdict;
+    html += `
+      <div style="margin-bottom:16px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+        <div style="font-weight:600;font-size:13px;padding:8px 12px;background:#f8f9fa;">${item.name}</div>
+        <div class="review-photo-row" style="padding:8px;">
+          <div class="review-photo">
+            <div class="label">📷 Ảnh mẫu</div>
+            <img src="${item.sample}" alt="Mẫu" style="width:100%;height:160px;object-fit:contain;background:#fafafa;" loading="lazy">
+          </div>
+          <div class="review-photo">
+            <div class="label">📸 Ảnh thực tế</div>
+            <img src="${sub.photo}" alt="Thực tế" style="width:100%;height:160px;object-fit:contain;background:#fafafa;" loading="lazy">
+          </div>
+        </div>
+        ${sub.deviation ? `<div style="padding:0 12px 8px;font-size:11px;color:var(--orange);">⚠️ CH ghi chú: ${sub.deviation}</div>` : ''}
+        ${reviewed 
+          ? `<div style="padding:0 12px 8px;">
+              <span class="qkvl-verdict ${sub.qlkvVerdict === 'pass' ? 'qkvl-pass' : 'qkvl-fail'}">
+                ${sub.qlkvVerdict === 'pass' ? '✅ Đạt' : '❌ Không đạt'}
+              </span>
+              ${sub.qlkvNote ? `<span style="font-size:11px;color:var(--gray);margin-left:8px;">${sub.qlkvNote}</span>` : ''}
+            </div>`
+          : `<div class="review-actions" style="padding:0 12px 12px;">
+              <button class="btn btn-pass btn-sm" onclick="qlkvVerdict('${storeCode}','${item.id}','pass')">✅ Đạt</button>
+              <button class="btn btn-fail btn-sm" onclick="qlkvVerdict('${storeCode}','${item.id}','fail')">❌ Không đạt</button>
+              <input type="text" id="qlkvNote-${item.id}" placeholder="Ghi chú (nếu cần)" style="flex:1;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
+            </div>`
+        }
+      </div>`;
+  });
+  
+  html += `<div style="text-align:center;padding:8px;">
+    <button class="btn btn-outline" onclick="qlkvCloseCH()">← Quay lại danh sách</button>
+  </div></div>`;
+  
+  document.getElementById('qlkvDetailView').innerHTML = html;
+  document.getElementById('qlkvDetailView').classList.remove('hidden');
+  document.getElementById('qlkvPendingList').classList.add('hidden');
+  document.getElementById('qlkvDoneList').classList.add('hidden');
+}
+
+function qlkvCloseCH() {
+  document.getElementById('qlkvDetailView').classList.add('hidden');
+  document.getElementById('qlkvPendingList').classList.remove('hidden');
+  document.getElementById('qlkvDoneList').classList.remove('hidden');
+  renderQLKVTab();
+}
+
+function qlkvVerdict(storeCode, itemId, verdict) {
+  const subs = state.submissions[storeCode] || {};
+  if (!subs[itemId]) subs[itemId] = {};
+  
+  const noteEl = document.getElementById(`qlkvNote-${itemId}`);
+  subs[itemId].qlkvVerdict = verdict;
+  subs[itemId].qlkvNote = noteEl ? noteEl.value.trim() : '';
+  subs[itemId].qlkvReviewedAt = new Date().toISOString();
+  
+  // Check if all items reviewed
+  const allReviewed = KSTT_ITEMS.every(item => {
+    const s = subs[item.id];
+    return !s || !s.photo || !!s.qlkvVerdict;
+  });
+  
+  if (allReviewed && subs._meta) {
+    subs._meta.qlkvReviewed = true;
+  }
+  
+  state.submissions[storeCode] = subs;
+  saveState();
+  
+  // Re-render this CH detail
+  qlkvOpenCH(storeCode);
+  toast(verdict === 'pass' ? '✅ Đã đánh giá Đạt' : '❌ Đã đánh giá Không đạt');
+}
+
+// ========== GDV VIEW ==========
+let gdvCurrentTab = 'pending';
+function renderGDVView() {
+  document.getElementById('gdvName').textContent = `GĐV: ${state.user.name}`;
+  const myStores = SAMPLE_STORES.filter(s => s.gdv === state.user.name);
+  document.getElementById('gdvDetail').textContent = `${myStores.length} CH phụ trách`;
+  renderGDVTab();
+}
+
+function switchGDVTab(tab) {
+  gdvCurrentTab = tab;
+  document.querySelectorAll('#viewGDV .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#viewGDV .tab-btn').forEach(b => {
+    if (b.textContent.includes(tab === 'pending' ? 'Chờ chốt' : 'Đã chốt')) b.classList.add('active');
+  });
+  document.getElementById('gdvPendingList').classList.toggle('hidden', tab !== 'pending');
+  document.getElementById('gdvDoneList').classList.toggle('hidden', tab !== 'done');
+  document.getElementById('gdvDetailView').classList.add('hidden');
+  renderGDVTab();
+}
+
+function renderGDVTab() {
+  const myStores = SAMPLE_STORES.filter(s => s.gdv === state.user.name);
+  
+  let pendingHTML = '';
+  let doneHTML = '';
+  
+  myStores.forEach(store => {
+    const subs = state.submissions[store.code] || {};
+    const meta = subs._meta || {};
+    const hasSubmitted = KSTT_ITEMS.some(item => subs[item.id] && subs[item.id].photo);
+    if (!hasSubmitted) return;
+    
+    const gdvDone = meta.gdvFinalized;
+    const qlkvDone = meta.qlkvReviewed;
+    
+    const card = `
+      <div class="ch-submission" onclick="gdvOpenCH('${store.code}')">
+        <div>
+          <div class="ch-info">${store.code} - ${store.name}</div>
+          <div class="ch-meta">QLKV: ${store.qlkv} · ${qlkvDone ? '✅ QLKV đã duyệt' : '⏳ Chưa duyệt'}</div>
+        </div>
+        <div class="ch-count">
+          ${gdvDone 
+            ? '<span class="qkvl-verdict qkvl-pass">✅ Đã chốt</span>' 
+            : '<span style="color:var(--orange);">⏳ Chờ chốt</span>'}
+        </div>
+      </div>
+    `;
+    
+    if (gdvDone) doneHTML += card;
+    else pendingHTML += card;
+  });
+  
+  if (!pendingHTML) pendingHTML = '<div style="text-align:center;padding:40px;color:var(--gray);">✅ Không có CH nào chờ chốt</div>';
+  if (!doneHTML) doneHTML = '<div style="text-align:center;padding:40px;color:var(--gray);">Chưa có CH nào được chốt</div>';
+  
+  document.getElementById('gdvPendingList').innerHTML = pendingHTML;
+  document.getElementById('gdvDoneList').innerHTML = doneHTML;
+}
+
+function gdvOpenCH(storeCode) {
+  const store = SAMPLE_STORES.find(s => s.code === storeCode);
+  const subs = state.submissions[storeCode] || {};
+  
+  let passCount = 0, failCount = 0;
+  let html = `<div style="background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);">
+    <div style="font-weight:700;font-size:15px;margin-bottom:10px;">📋 ${storeCode} - ${store.name}</div>
+    <div style="font-size:12px;color:var(--gray);margin-bottom:14px;">QLKV: ${store.qlkv} · QLKV duyệt: ${subs._meta?.qlkvReviewed ? '✅' : '⏳'}</div>`;
+  
+  KSTT_ITEMS.forEach(item => {
+    const sub = subs[item.id];
+    if (!sub || !sub.photo) return;
+    
+    const gdvDone = !!sub.gdvVerdict;
+    if (gdvDone) { if (sub.gdvVerdict === 'pass') passCount++; else failCount++; }
+    
+    html += `
+      <div style="margin-bottom:14px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+        <div style="font-weight:600;font-size:13px;padding:8px 12px;background:#f8f9fa;display:flex;justify-content:space-between;">
+          <span>${item.name}</span>
+          <span style="font-size:11px;">
+            ${sub.qlkvVerdict 
+              ? (sub.qlkvVerdict === 'pass' ? '✅ QLKV Đạt' : '❌ QLKV Không đạt') 
+              : '⏳ QLKV chưa duyệt'}
+          </span>
+        </div>
+        <div class="review-photo-row" style="padding:8px;">
+          <div class="review-photo">
+            <div class="label">📷 Mẫu</div>
+            <img src="${item.sample}" style="width:100%;height:140px;object-fit:contain;background:#fafafa;" loading="lazy">
+          </div>
+          <div class="review-photo">
+            <div class="label">📸 Thực tế</div>
+            <img src="${sub.photo}" style="width:100%;height:140px;object-fit:contain;background:#fafafa;" loading="lazy">
+          </div>
+        </div>
+        ${sub.deviation ? `<div style="padding:0 12px 4px;font-size:11px;color:var(--orange);">⚠️ CH ghi chú: ${sub.deviation}</div>` : ''}
+        ${sub.qlkvNote ? `<div style="padding:0 12px 4px;font-size:11px;color:var(--blue);">📝 QLKV: ${sub.qlkvNote}</div>` : ''}
+        ${gdvDone 
+          ? `<div style="padding:0 12px 8px;">
+              <span class="qkvl-verdict ${sub.gdvVerdict === 'pass' ? 'qkvl-pass' : 'qkvl-fail'}">
+                ${sub.gdvVerdict === 'pass' ? '✅ GĐV chốt Đạt' : '❌ GĐV chốt Không đạt'}
+              </span>
+              ${sub.gdvNote ? `<span style="font-size:11px;color:var(--gray);margin-left:8px;">${sub.gdvNote}</span>` : ''}
+            </div>`
+          : `<div class="review-actions" style="padding:0 12px 12px;">
+              <button class="btn btn-pass btn-sm" onclick="gdvVerdict('${storeCode}','${item.id}','pass')">✅ Chốt Đạt</button>
+              <button class="btn btn-fail btn-sm" onclick="gdvVerdict('${storeCode}','${item.id}','fail')">❌ Chốt Không đạt</button>
+              <input type="text" id="gdvNote-${item.id}" placeholder="Ghi chú GĐV" style="flex:1;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
+            </div>`
+        }
+      </div>`;
+  });
+  
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;">
+    <button class="btn btn-outline" onclick="gdvCloseCH()">← Quay lại</button>
+    ${subs._meta?.qlkvReviewed && !subs._meta?.gdvFinalized 
+      ? `<button class="btn btn-primary" onclick="gdvChotAll('${storeCode}')">✅ Chốt tất cả Đạt</button>` 
+      : ''}
+  </div></div>`;
+  
+  document.getElementById('gdvDetailView').innerHTML = html;
+  document.getElementById('gdvDetailView').classList.remove('hidden');
+  document.getElementById('gdvPendingList').classList.add('hidden');
+  document.getElementById('gdvDoneList').classList.add('hidden');
+}
+
+function gdvCloseCH() {
+  document.getElementById('gdvDetailView').classList.add('hidden');
+  document.getElementById('gdvPendingList').classList.remove('hidden');
+  document.getElementById('gdvDoneList').classList.remove('hidden');
+  renderGDVTab();
+}
+
+function gdvVerdict(storeCode, itemId, verdict) {
+  const subs = state.submissions[storeCode] || {};
+  if (!subs[itemId]) subs[itemId] = {};
+  
+  const noteEl = document.getElementById(`gdvNote-${itemId}`);
+  subs[itemId].gdvVerdict = verdict;
+  subs[itemId].gdvNote = noteEl ? noteEl.value.trim() : '';
+  subs[itemId].gdvChotAt = new Date().toISOString();
+  
+  // Check if all reviewed by GDV
+  const allChot = KSTT_ITEMS.every(item => {
+    const s = subs[item.id];
+    return !s || !s.photo || !!s.gdvVerdict;
+  });
+  
+  if (allChot && subs._meta) {
+    subs._meta.gdvFinalized = true;
+  }
+  
+  state.submissions[storeCode] = subs;
+  saveState();
+  
+  gdvOpenCH(storeCode);
+  toast(verdict === 'pass' ? '✅ Đã chốt Đạt' : '❌ Đã chốt Không đạt');
+}
+
+function gdvChotAll(storeCode) {
+  const subs = state.submissions[storeCode] || {};
+  KSTT_ITEMS.forEach(item => {
+    if (subs[item.id] && subs[item.id].photo && !subs[item.id].gdvVerdict) {
+      subs[item.id].gdvVerdict = 'pass';
+      subs[item.id].gdvChotAt = new Date().toISOString();
+    }
+  });
+  if (subs._meta) subs._meta.gdvFinalized = true;
+  state.submissions[storeCode] = subs;
+  saveState();
+  gdvOpenCH(storeCode);
+  toast('✅ Đã chốt tất cả Đạt');
+}
+
+// ========== UTILS ==========
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ========== INIT ==========
+init();
+</script>
+</body>
+</html>
